@@ -113,6 +113,8 @@ calc_genoprob<-function(ref_read_ns, tot_read_ns, rec_frac, error_prob, poss_gen
 
 #function to pass data table to calc_genoprob. takes a VCF
 #gwrr -- genome-wide recombination rate, in cM/Mb
+#not really complete yet. important to determine parental origin of each allele. just for now, to get things running, assumes that first count in AD vector is ref (i.e., ID of allele present in homozygotes).
+#could also be solved by aligning to reference recoded w/ PWD variants. maybe.
 pass_dat<-function(path, rec_frac_unif = TRUE, error_prob, gwrr){
     dat<-read.table(path, header = FALSE)
     ref_read_ns<-numeric(nrow(dat))
@@ -120,6 +122,7 @@ pass_dat<-function(path, rec_frac_unif = TRUE, error_prob, gwrr){
     #parse allele count data
     for(i in 1:nrow(dat)){
       allele_counts<-as.numeric(strsplit(strsplit(as.character(dat[[10]][i]), split = ':')[[1]][2], split = ',')[[1]])
+      #again, need to adjust to assign parental origin of alleles. For now, treat 1/2 cases as 0/1.
       if(length(allele_counts) > 2){
         allele_counts<-allele_counts[2:3]
       }
