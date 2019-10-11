@@ -1,7 +1,7 @@
 '''
-HMM for estimating genotype probabilities from allele count data
+Estimating genotype probabilities from allele count data
 '''
-
+args<-commandArgs(trailingOnly = TRUE)
 #Functions for initial, transition and emission probabilities
 
 init<-function(){return(log(0.5))}
@@ -106,3 +106,31 @@ calc_genoprob(ref_read_ns, tot_read_ns, rec_frac, error_prob, poss_gen = c('AA',
   }
   return(genoprobs)
 }
+
+#function to pass data table to calc_genoprob. takes a VCF
+#gwrr -- genome-wide recombination rate, in cM/Mb
+pass_dat<-function(path, rec_frac_unif = TRUE, error_prob, gwrr){
+    dat<-read.table(path, header = FALSE)
+    ref_read_ns<-numeric(nrow(dat))
+    tot_read_ns<-numeric(nrow(dat))
+    #parse allele count data
+    for(i in 1:nrow(dat)){
+      allele_counts<-as.numeric(strsplit(strsplit(dat[10][i], split = ':')[[1]][2], split = ',')[[1]])
+      ref_read_ns[i]<-allele_counts[1]
+      tot_read_ns[i]<-sum(allele_counts)
+    }
+    #obtain recombination fractions from genome-wide avg (espressed in cM/Mb) assuming uniform rate -- move this into above for loop
+    rec_frac<-numeric(nrow(dat) - 1)
+    for(pos in 1:length(rec_frac)){
+      #distance (in bp) between marker at pos and marker at pos + 1
+      bp_dist<-as.integer(dat[2][pos + 1]) - as.integer(dat[2][pos])
+      #convert to megabases
+      bp_dist<-bp_dist/1e6
+      #convert to cM
+      cM<-gwrr * bp_dist
+      rec_frac[pos]<-cM
+    }
+    calc_genoprob(ref_read_ns = ref_read_ns, tot_read_ns = tot_read_ns, rec_frac = rec_frac, error_prob = error_prob)
+}
+
+pass_dat(path = args[1], error_prob = args[2], gwrr = args[3])
