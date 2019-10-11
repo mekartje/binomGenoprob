@@ -1,6 +1,5 @@
-'''
-Estimating genotype probabilities from allele count data
-'''
+#Estimating genotype probabilities from allele count data
+
 args<-commandArgs(trailingOnly = TRUE)
 #Functions for initial, transition and emission probabilities
 
@@ -13,10 +12,10 @@ emit<-function(n_ref_read, #integer -- observed count of reference allele
   error_prob) { #double -- error probability
     #assume autosome
     if(true_gen == 'AA'){
-      em_pr<-dbinom(x = n_ref_read, size = n_tot_read, prob = error_prob, log = TRUE)
+      em_pr<-dbinom(x = n_ref_read, size = n_tot_read, prob = 1 - error_prob, log = TRUE)
     }
     else if(true_gen == 'AB'){
-      em_pr<-dbinom(x = n_ref_read, size = n_tot_read, prob = error_prob, log = TRUE)
+      em_pr<-dbinom(x = n_ref_read, size = n_tot_read, prob = 0.5, log = TRUE)
     }
     return(em_pr)
 }
@@ -29,11 +28,16 @@ step<-function(gen_left, gen_right, rec_frac){
 
 
 addlog<-function(a, b){
-  tol = 200
-  if(b > a + tol){return(b)}
-  else if(a > b + tol){return(a)}
-  else{return(a + log1p(exp(b - a)))}
+  if(is.nan(a) || is.nan(b)){return(NaN)}
+  else{
+    print(a)
+    tol = 200
+    if(b > (a + tol)){return(b)}
+    else if(a > b + tol){return(a)}
+    else{return(a + log1p(exp(b - a)))}
+  }
 }
+
 
 #Functions for forward and backward equations
 
@@ -63,7 +67,7 @@ forwardEquations<-function(ref_read_ns, tot_read_ns, rec_frac, error_prob, poss_
 backwardEquations<-function(ref_read_ns, tot_read_ns, rec_frac, error_prob, poss_gen){
   n_pos<-length(ref_read_ns)
   n_gen<-length(poss_gen)
-  beta<-matrix(data = 0, nrow = g_gen, ncol = n_pos)
+  beta<-matrix(data = 0, nrow = n_gen, ncol = n_pos)
   for(pos in n_pos - 1:1){
     for(il in 1:n_gen){
       for(ir in 1:n_gen){
@@ -79,7 +83,7 @@ backwardEquations<-function(ref_read_ns, tot_read_ns, rec_frac, error_prob, poss
 
 #ref_read_ns and tot_read_ns are matricies with columns as individuals, rows as markers
 #backcross individuals only, so poss_gen is the same for all individuals -- AA or AB
-calc_genoprob(ref_read_ns, tot_read_ns, rec_frac, error_prob, poss_gen = c('AA', 'AB')){
+calc_genoprob<-function(ref_read_ns, tot_read_ns, rec_frac, error_prob, poss_gen = c('AA', 'AB')){
   n_ind<-ncol(ref_read_ns)
   n_pos<-nrow(ref_read_ns)
   n_mar<-n_pos
@@ -90,12 +94,12 @@ calc_genoprob(ref_read_ns, tot_read_ns, rec_frac, error_prob, poss_gen = c('AA',
   for(ind in 1:n_ind){
     alpha<-forwardEquations(ref_read_ns = ref_read_ns[,ind], tot_read_ns = tot_read_ns[,ind], rec_frac = rec_frac, error_prob = error_prob, poss_gen = poss_gen)
     beta<-backwardEquations(ref_read_ns = ref_read_ns[,ind], tot_read_ns = tot_read_ns[,ind], rec_frac = rec_frac, error_prob = error_prob, poss_gen = poss_gen)
-    for(pos in 1:n_pos)){
+    for(pos in 1:n_pos){
       g<-1 #starts at 0 for BC assuming autosomes only, see genotype enumeration in cross_bc.cpp
       sum_at_pos<-genoprobs[g,pos,ind]<-alpha[1,pos] + beta[1,pos]
       for(i in 1:n_poss_gen){
         g<-i #just putting this here for consistency with cpp code
-        val<-genoprobs[g,pos,ind]<-alpha[i, pos], beta[i, pos]
+        val<-genoprobs[g,pos,ind]<-alpha[i, pos] + beta[i, pos]
         sum_at_pos<-addlog(sum_at_pos, val)
       }
       for(i in 1:n_poss_gen){
@@ -115,22 +119,25 @@ pass_dat<-function(path, rec_frac_unif = TRUE, error_prob, gwrr){
     tot_read_ns<-numeric(nrow(dat))
     #parse allele count data
     for(i in 1:nrow(dat)){
-      allele_counts<-as.numeric(strsplit(strsplit(dat[10][i], split = ':')[[1]][2], split = ',')[[1]])
+      allele_counts<-as.numeric(strsplit(strsplit(as.character(dat[[10]][i]), split = ':')[[1]][2], split = ',')[[1]])
+      if(length(allele_counts) > 2){
+        allele_counts<-allele_counts[2:3]
+      }
       ref_read_ns[i]<-allele_counts[1]
       tot_read_ns[i]<-sum(allele_counts)
     }
     #obtain recombination fractions from genome-wide avg (espressed in cM/Mb) assuming uniform rate -- move this into above for loop
     rec_frac<-numeric(nrow(dat) - 1)
-    for(pos in 1:length(rec_frac)){
+    for(pos in 1:length(rec_frac)-1){
       #distance (in bp) between marker at pos and marker at pos + 1
-      bp_dist<-as.integer(dat[2][pos + 1]) - as.integer(dat[2][pos])
+      bp_dist<-as.integer(dat[[2]][pos + 1]) - as.integer(dat[[2]][pos])
       #convert to megabases
       bp_dist<-bp_dist/1e6
       #convert to cM
       cM<-gwrr * bp_dist
       rec_frac[pos]<-cM
     }
-    calc_genoprob(ref_read_ns = ref_read_ns, tot_read_ns = tot_read_ns, rec_frac = rec_frac, error_prob = error_prob)
+    calc_genoprob(ref_read_ns = matrix(ref_read_ns, ncol = 1), tot_read_ns = matrix(tot_read_ns, ncol = 1), rec_frac = rec_frac, error_prob = error_prob)
 }
 
-pass_dat(path = args[1], error_prob = args[2], gwrr = args[3])
+pass_dat(path = args[1], error_prob = 0.002, gwrr = 0.6)
