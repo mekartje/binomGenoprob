@@ -135,7 +135,8 @@ pass_dat<-function(path, rec_frac_unif = TRUE, error_prob, gwrr){
       bp_dist<-bp_dist/1e6
       #convert to cM
       cM<-gwrr * bp_dist
-      rec_frac[pos]<-cM
+      #convert to M
+      rec_frac[pos]<-cM/100
     }
     calc_genoprob(ref_read_ns = matrix(ref_read_ns, ncol = 1), tot_read_ns = matrix(tot_read_ns, ncol = 1), rec_frac = rec_frac, error_prob = error_prob)
 }
