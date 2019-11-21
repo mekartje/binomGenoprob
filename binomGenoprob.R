@@ -48,7 +48,7 @@ addlog<-function(a, b){
 forwardEquations<-function(ref_read_ns, tot_read_ns, rec_frac, error_prob, poss_gen){
   n_pos<-length(ref_read_ns)
   n_gen<-length(poss_gen)
-  #matrix containing ln(P(G_i = g | marker data)) (this is final output)
+  #matrix containing alphas (ai(g) = P(O1, O2, O3, ..., Oi, Gi = g))
   alpha<-matrix(data = 0, nrow = n_gen, ncol = n_pos)
   #initialize alphas
   #for each possible genotype (2 possibilities in backcross) (i.e., iterate over each row in the matrix)
@@ -81,6 +81,7 @@ forwardEquations<-function(ref_read_ns, tot_read_ns, rec_frac, error_prob, poss_
 backwardEquations<-function(ref_read_ns, tot_read_ns, rec_frac, error_prob, poss_gen){
   n_pos<-length(ref_read_ns)
   n_gen<-length(poss_gen)
+  #matrix containing betas (bi(g) = P(Oi+1, Oi+2, On | Gi = g)) where n = number of markers
   beta<-matrix(data = 0, nrow = n_gen, ncol = n_pos)
   for(pos in n_pos - 1:1){
     for(il in 1:n_gen){
