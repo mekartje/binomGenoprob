@@ -30,7 +30,6 @@ step<-function(gen_left, gen_right, rec_frac){
 addlog<-function(a, b){
   if(is.nan(a) || is.nan(b)){return(NaN)}
   else{
-    print(a)
     tol = 200
     if(b > (a + tol)){return(b)}
     else if(a > b + tol){return(a)}
@@ -144,4 +143,9 @@ pass_dat<-function(path, rec_frac_unif = TRUE, error_prob, gwrr){
     calc_genoprob(ref_read_ns = matrix(ref_read_ns, ncol = 1), tot_read_ns = matrix(tot_read_ns, ncol = 1), rec_frac = rec_frac, error_prob = error_prob)
 }
 
-pass_dat(path = args[1], error_prob = 0.002, gwrr = 0.6)
+res<-pass_dat(path = args[1], error_prob = 0.002, gwrr = 0.6)
+
+#coerce single individual data into dataframe
+df<-t(as.data.frame(res[,,1]))
+write.table(df, file = args[2])
+
