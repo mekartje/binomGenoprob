@@ -113,7 +113,7 @@ calc_genoprob<-function(ref_read_ns, tot_read_ns, rec_frac, error_prob, poss_gen
       g<-1 #starts at 0 for BC assuming autosomes only, see genotype enumeration in cross_bc.cpp
       sum_at_pos<-genoprobs[g,pos,ind]<-alpha[1,pos] + beta[1,pos]
       for(i in 1:n_poss_gen){
-        g<-i #just putting this here for consistency with cpp code
+        g<-i #just putting this here for consistency with cpp code, could just use 'i' to index genoprobs
         val<-genoprobs[g,pos,ind]<-alpha[i, pos] + beta[i, pos]
         sum_at_pos<-addlog(sum_at_pos, val)
       }
