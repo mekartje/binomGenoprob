@@ -31,6 +31,7 @@ step<-function(gen_left, gen_right, rec_frac){
 }
 
 #function adding logs (log-transform probs to prevent underflow)
+#FLAG
 addlog<-function(a, b){
   if(is.nan(a) || is.nan(b)){return(NaN)}
   else{
@@ -63,17 +64,15 @@ forwardEquations<-function(ref_read_ns, tot_read_ns, rec_frac, error_prob, poss_
   for(pos in 2:n_pos){
     for(ir in 1:n_gen){
       #initialize alpha for genotype ir, position pos 
-      #QUESTION -- why did I initialize aphas for both genotypes using alpha for first genotype only? (alpha[1, pos-1])
       alpha[ir, pos]<-alpha[1, pos - 1] + step(poss_gen[1], poss_gen[ir], rec_frac[pos - 1])
-      #iterating again over genotypes, il
-      #I think there is an error here. do not need to go over 1st genotype again (il in 1:n_gen). start w/2nd (il in 2:n_gen)
+      #iterating over remaining genotypes, il
       for(il in 2:n_gen){
         #add to this the following sum:
         #alpha for genotype il at the position immediately left + the step prob from genotype il to genotype ir at the interval to the left of position pos
         alpha[ir, pos]<-addlog(alpha[ir, pos], alpha[il, pos - 1] + step(poss_gen[il], poss_gen[ir], rec_frac[pos - 1]))
       }
       #once both genotypes are iterated over, add the emission probability of the observed number of reference reads given true genotype ir
-      alpha[ir, pos] = alpha[ir, pos] + emit(n_ref_read = ref_read_ns[pos], n_tot_read = tot_read_ns[pos], true_gen = poss_gen[ir], error_prob = error_prob)
+      alpha[ir, pos]<-alpha[ir, pos] + emit(n_ref_read = ref_read_ns[pos], n_tot_read = tot_read_ns[pos], true_gen = poss_gen[ir], error_prob = error_prob)
     }
   }
   return(alpha)
@@ -97,6 +96,7 @@ backwardEquations<-function(ref_read_ns, tot_read_ns, rec_frac, error_prob, poss
   return(beta)
 }
 
+#FLAG
 #ref_read_ns and tot_read_ns are matricies with columns as individuals, rows as markers
 #backcross individuals only, so poss_gen is the same for all individuals -- AA or AB
 #copying rqtl2 hmm_calcgenoprob.cpp
@@ -115,7 +115,8 @@ calc_genoprob<-function(ref_read_ns, tot_read_ns, rec_frac, error_prob, poss_gen
     for(pos in 1:n_pos){
       g<-1 #starts at 0 for BC assuming autosomes only, see genotype enumeration in cross_bc.cpp
       sum_at_pos<-genoprobs[g,pos,ind]<-alpha[1,pos] + beta[1,pos]
-      for(i in 1:n_poss_gen){
+      #loop over remaining genotypes -- change(i in 1:n_poss_gen) to (i in 2:n_poss_gen)
+      for(i in 2:n_poss_gen){
         g<-i #just putting this here for consistency with cpp code, could just use 'i' to index genoprobs
         val<-genoprobs[g,pos,ind]<-alpha[i, pos] + beta[i, pos]
         sum_at_pos<-addlog(sum_at_pos, val)
