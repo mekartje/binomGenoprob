@@ -31,7 +31,6 @@ step<-function(gen_left, gen_right, rec_frac){
 }
 
 #function adding logs (log-transform probs to prevent underflow)
-#FLAG
 addlog<-function(a, b){
   if(is.nan(a) || is.nan(b)){return(NaN)}
   else{
