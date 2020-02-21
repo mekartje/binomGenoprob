@@ -133,6 +133,8 @@ calc_genoprob<-function(ref_read_ns, tot_read_ns, rec_frac, error_prob, poss_gen
 #gwrr -- genome-wide recombination rate, in cM/Mb
 #assumes that first count in AD vector is ref (i.e., ID of allele present in homozygotes).
 pass_dat<-function(path, rec_frac_unif = TRUE, error_prob, gwrr){
+    error_prob<-as.numeric(error_prob)
+    gwrr<-as.numeric(gwrr)
     dat<-read.table(path, header = FALSE)
     ref_read_ns<-numeric(nrow(dat))
     tot_read_ns<-numeric(nrow(dat))
