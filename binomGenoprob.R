@@ -96,10 +96,9 @@ backwardEquations<-function(ref_read_ns, tot_read_ns, rec_frac, error_prob, poss
   return(beta)
 }
 
-#FLAG
 #ref_read_ns and tot_read_ns are matricies with columns as individuals, rows as markers
 #backcross individuals only, so poss_gen is the same for all individuals -- AA or AB
-#copying rqtl2 hmm_calcgenoprob.cpp
+#copying rqtl2 hmm_calcgenoprob.cpp, except for structure of output array
 calc_genoprob<-function(ref_read_ns, tot_read_ns, rec_frac, error_prob, poss_gen = c('AA', 'AB')){
   n_ind<-ncol(ref_read_ns)
   n_pos<-nrow(ref_read_ns)
