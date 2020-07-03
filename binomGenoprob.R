@@ -62,7 +62,7 @@ forwardEquations<-function(ref_read_ns, tot_read_ns, rec_frac, error_prob, poss_
   #for each position (pos; column) starting at position 2, and each possible genotype (ir)
   for(pos in 2:n_pos){
     for(ir in 1:n_gen){
-      #initialize alpha for genotype ir, position pos 
+      #initialize alpha for genotype ir, position pos
       alpha[ir, pos]<-alpha[1, pos - 1] + step(poss_gen[1], poss_gen[ir], rec_frac[pos - 1])
       #iterating over remaining genotypes, il
       for(il in 2:n_gen){
@@ -139,6 +139,7 @@ pass_dat<-function(path, rec_frac_unif = TRUE, error_prob, gwrr){
     tot_read_ns<-numeric(nrow(dat))
     #parse allele count data
     for(i in 1:nrow(dat)){
+      print(as.character(dat[[10]][i]))
       allele_counts<-as.numeric(strsplit(strsplit(as.character(dat[[10]][i]), split = ':')[[1]][2], split = ',')[[1]])
       #again, need to adjust to assign parental origin of alleles. For now, treat 1/2 cases as 0/1.
       if(length(allele_counts) > 2){
@@ -167,4 +168,3 @@ res<-pass_dat(path = args[1], error_prob = args[3], gwrr = args[4])
 #coerce single individual data into dataframe
 df<-t(as.data.frame(res[,,1]))
 write.table(df, file = args[2])
-
