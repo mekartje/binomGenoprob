@@ -139,7 +139,7 @@ pass_dat<-function(path, rec_frac_unif = TRUE, error_prob, gwrr){
     tot_read_ns<-numeric(nrow(dat))
     #parse allele count data
     for(i in 1:nrow(dat)){
-      print(as.character(dat[[10]][i]))
+      print(as.character(dat[i]))
       allele_counts<-as.numeric(strsplit(strsplit(as.character(dat[[10]][i]), split = ':')[[1]][2], split = ',')[[1]])
       #again, need to adjust to assign parental origin of alleles. For now, treat 1/2 cases as 0/1.
       if(length(allele_counts) > 2){
