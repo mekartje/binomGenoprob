@@ -40,6 +40,37 @@ def getCO(hetProb, tau):
                 i += 1
         posCO.append((k, posLis[posLis.index(k) + i]))
     return(posCO)
+
+#some of the output from getCO will be redundant, making output like this:
+#CO_start        CO_end
+#90209440        101005788
+#100305541       101005788
+
+#function to refine CO intervals, keeping only the smallest. potentially come back to refine this later
+#redundant intervals will only ever share an endpoint, b/c the loop in getCO moves from left to right
+def refineCO(posCO):
+    #cast posCO as dictionary with endpoint as key, start as value
+    posCO_dict = {}
+    for i in posCO:
+        #if endpoing alread in posCO
+        if i[1] in list(posCO_dict.keys()):
+            #find which startpoint gives a smaller interval
+            oldLength = i[1] - posCO_dict[i[1]]
+            newLength = i[1] - i[0]
+            #keep shorter interval
+            if oldLength < newLength:
+                continue
+            elif newLength < oldLength:
+                posCO_dict[i[1]] = i[0]
+        else:
+            posCO_dict[i[1]] = i[0]
+    #rewrite posCO as list of tuples. inefficient, but this is the was things were set up originally
+    posCO_new = []
+    for k,v in posCO_dict.items():
+        posCO_new.append((v, k))
+    return(posCO_new)
+
+#main
 tau = float(sys.argv[2])
 #initialize dictionary of P(het)
 hetProb = {}
@@ -51,7 +82,9 @@ with open(sys.argv[1]) as inf:
         line = line.rstrip().split(' ')
         hetProb[int(line[0])] = float(line[2])
 posCO = getCO(hetProb = hetProb, tau = tau)
-
+#refine CO interval list with refineCO
+posCO = refineCO(posCO)
+#write output
 with open(sys.argv[1][:-4] + '_posCO.txt', 'w') as outf:
     #write header line
     outf.writelines('CO_start\tCO_end\n')
