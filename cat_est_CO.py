@@ -14,7 +14,7 @@ with open(sys.argv[2], 'w') as outf:
         #read off header line
         inf.readline()
         #get rep ID
-        rep = '_'.join(f.split('_')[:4])
+        rep = '_'.join(f.split('_')[:5])
         #read remaining res to outfile
         for line in inf:
             line = line.rstrip().split('\t')
