@@ -16,7 +16,7 @@ with open(sys.argv[2], 'w') as outf:
         #get rep ID
         rep = '_'.join(f.split('_')[:4])
         #read remaining res to outfile
-        for line in f:
+        for line in inf:
             line = line.rstrip().split('\t')
             outf.writelines(rep + '\t' + line[0] + '\t' + line[1] + '\n')
         inf.close()
