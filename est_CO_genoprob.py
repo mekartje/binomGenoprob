@@ -33,11 +33,19 @@ def getCO(hetProb, tau):
             #Explain strange indexing -- need to index hetProb with an actual position in bp, because these are its keys
                 #to get the next position, use the list 'posLis'. First find the position for k (posLis.index(k)), and add i to it (posLis.index(k) + 1)
                 #then take this entry from posLis (posLis[posLis.index(k) + 1]) to get the index to use for the next marker in hetProb
-            while hetProb[posLis[posLis.index(k) + i]] > 1 - tau:
-                i += 1
+            #If there is a dip in P(het) below tau or above 1-tau where a crossover is never resolved (e.g., no transition from tau to 1-tau or 1-tau to tau), will throw an index error
+                #Just add try/except to avoid this, aborting search for instances throwing an IndexError
+            try:
+                while hetProb[posLis[posLis.index(k) + i]] > 1 - tau:
+                    i += 1
+            except IndexError:
+                continue
         elif hetProb[k] <= 1 - tau:
-            while hetProb[posLis[posLis.index(k) + i]] < tau:
-                i += 1
+            try:
+                while hetProb[posLis[posLis.index(k) + i]] < tau:
+                    i += 1
+            except IndexError:
+                continue
         posCO.append((k, posLis[posLis.index(k) + i]))
     return(posCO)
 
